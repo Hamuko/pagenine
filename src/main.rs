@@ -1,10 +1,11 @@
 use chrono;
+use chrono::prelude::{DateTime, Utc};
 use clap::Parser;
 use std::time::Duration;
 use tokio::{task, time};
 
+mod api;
 mod data;
-mod response;
 
 #[derive(Parser, Debug)]
 pub struct PagenineArgs {
@@ -21,32 +22,16 @@ fn validate_board(value: &str) -> Result<String, String> {
     Ok(value.trim_matches('/').to_string())
 }
 
-async fn get_catalog(board: &String) -> Result<response::APICatalog, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("https://a.4cdn.org/{}/catalog.json", board);
-    let response = client.get(url).send().await?;
-    let catalog = response.json::<response::APICatalog>().await?;
-    Ok(catalog)
-}
-
-async fn get_current_thread(board: &String, title: &String) -> Option<data::Thread> {
-    let catalog = match get_catalog(board).await {
+async fn get_current_thread(
+    board: &String,
+    title: &String,
+    if_modified_since: Option<DateTime<Utc>>,
+) -> Option<data::Thread> {
+    let catalog = match api::Catalog::fetch(board, if_modified_since).await {
         Ok(catalog) => catalog,
         Err(_) => { return None; }
     };
-    for page in catalog {
-        for thread in page.threads {
-            if thread.sub.contains(title) {
-                return Some(data::Thread {
-                    page: page.page,
-                    no: thread.no,
-                    sub: thread.sub,
-                    time: chrono::offset::Utc::now(),
-                });
-            }
-        }
-    }
-    return None;
+    catalog.find(title)
 }
 
 async fn check(args: &PagenineArgs, previous_thread: Option<data::Thread>) -> Option<data::Thread> {
@@ -55,7 +40,8 @@ async fn check(args: &PagenineArgs, previous_thread: Option<data::Thread>) -> Op
         None => true,
     };
     let thread = if refresh {
-        get_current_thread(&args.board, &args.title).await?
+        let last_update_time = previous_thread.map(|thread| thread.time);
+        get_current_thread(&args.board, &args.title, last_update_time).await?
     } else {
         previous_thread.unwrap()
     };

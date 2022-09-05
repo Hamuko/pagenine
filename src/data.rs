@@ -1,6 +1,21 @@
 use chrono::prelude::{DateTime, Utc};
 
 #[derive(Default, Debug)]
+pub struct State {
+    pub thread: Option<Thread>,
+    pub notified: i32,
+}
+
+impl State {
+    pub fn new() -> Self {
+        State {
+            thread: None,
+            notified: 0,
+        }
+    }
+}
+
+#[derive(Default, Debug)]
 pub struct Thread {
     pub page: i32,
     pub no: i32,

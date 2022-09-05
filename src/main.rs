@@ -34,24 +34,38 @@ async fn get_current_thread(
     catalog.find(title)
 }
 
-async fn check(args: &PagenineArgs, previous_thread: Option<data::Thread>) -> Option<data::Thread> {
-    let refresh = match &previous_thread {
-        Some(thread) => thread.check_if_needs_refresh(),
-        None => true,
-    };
+async fn check(args: &PagenineArgs, state: data::State) -> data::State {
+    let refresh = state
+        .thread
+        .as_ref()
+        .map_or(true, |thread| thread.check_if_needs_refresh());
+
     let thread = if refresh {
-        let last_update_time = previous_thread.map(|thread| thread.time);
-        get_current_thread(&args.board, &args.title, last_update_time).await?
+        let last_update_time = state.thread.map(|thread| thread.time);
+        get_current_thread(&args.board, &args.title, last_update_time).await
     } else {
-        previous_thread.unwrap()
+        state.thread
+    };
+    let thread = match thread {
+        Some(thread) => thread,
+        None => return data::State::new(),
     };
 
-    if refresh && thread.page >= 9 {
+    let mut notified = state.notified;
+    if thread.page >= 9 && thread.page != state.notified {
         println!("Page >{}", thread.page);
-        let _ = thread.show_notification();
+        let notification_shown = thread.show_notification();
+        notified = match notification_shown {
+            Ok(_) => thread.page,
+            Err(_) => state.notified,
+        }
+    } else if thread.page < 9 {
+        notified = 0;
     }
-
-    return Some(thread);
+    return data::State {
+        thread: Some(thread),
+        notified: notified,
+    };
 }
 
 #[tokio::main]
@@ -60,11 +74,11 @@ async fn main() {
 
     let forever = task::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(60));
-        let mut thread: Option<data::Thread> = None;
+        let mut state = data::State::new();
 
         loop {
             interval.tick().await;
-            thread = check(&args, thread).await;
+            state = check(&args, state).await;
         }
     });
 

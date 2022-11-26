@@ -22,6 +22,8 @@ pub struct Thread {
     pub no: i32,
     pub sub: String,
     pub time: DateTime<Utc>,
+    pub position: i32,
+    pub page_length: i32,
 }
 
 impl Thread {

@@ -3,6 +3,8 @@ use chrono::prelude::{DateTime, Utc};
 use clap::Parser;
 use std::time::Duration;
 use tokio::{task, time};
+use simple_logger::SimpleLogger;
+use log::{info, warn, LevelFilter};
 
 mod api;
 mod data;
@@ -38,7 +40,10 @@ async fn get_current_thread(
 ) -> Option<data::Thread> {
     let catalog = match api::Catalog::fetch(board, if_modified_since).await {
         Ok(catalog) => catalog,
-        Err(_) => { return None; }
+        Err(error) => {
+            warn!("{}", error);
+            return None;
+        }
     };
     catalog.find(title)
 }
@@ -64,9 +69,12 @@ async fn check(
         None => return data::State::new(),
     };
 
+    if refresh {
+        info!("\"{}\", page {} ({}/{})", thread.sub, thread.page, thread.position, thread.page_length);
+    }
+
     let mut notified = state.notified;
     if thread.page >= 9 && thread.page != state.notified {
-        println!("Page >{}", thread.page);
         let notification_shown = match pushover_client {
             Some(pushover_client) => thread.send_pushover_notification(pushover_client).await,
             None => thread.show_notification(),
@@ -86,6 +94,7 @@ async fn check(
 
 #[tokio::main]
 async fn main() {
+    SimpleLogger::new().with_level(LevelFilter::Info).env().init().unwrap();
     let args = PagenineArgs::parse();
 
     let forever = task::spawn(async move {

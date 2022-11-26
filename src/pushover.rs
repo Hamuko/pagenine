@@ -1,3 +1,5 @@
+use log::{error};
+
 const PUSHOVER_API_URL: &str = "https://api.pushover.net/1/messages.json";
 
 #[derive(Default, Debug)]
@@ -20,7 +22,7 @@ impl PushoverClient {
         let response = match client.post(PUSHOVER_API_URL).form(&params).send().await {
             Ok(response) => response,
             Err(e) => {
-                println!("{:?}", e);
+                error!("{:?}", e);
                 return Err(());
             }
         };

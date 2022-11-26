@@ -6,6 +6,7 @@ use tokio::{task, time};
 
 mod api;
 mod data;
+mod pushover;
 
 #[derive(Parser, Debug)]
 pub struct PagenineArgs {
@@ -16,6 +17,14 @@ pub struct PagenineArgs {
     /// Title of the thread to scan.
     #[clap(value_parser)]
     pub title: String,
+
+    /// Pushover application API key.
+    #[clap(long, value_parser)]
+    pub pushover_application_api_token: Option<String>,
+
+    /// Pushover user key.
+    #[clap(long, value_parser)]
+    pub pushover_user_key: Option<String>,
 }
 
 fn validate_board(value: &str) -> Result<String, String> {
@@ -34,7 +43,11 @@ async fn get_current_thread(
     catalog.find(title)
 }
 
-async fn check(args: &PagenineArgs, state: data::State) -> data::State {
+async fn check(
+    args: &PagenineArgs,
+    pushover_client: &Option<pushover::PushoverClient>,
+    state: data::State,
+) -> data::State {
     let refresh = state
         .thread
         .as_ref()
@@ -54,7 +67,10 @@ async fn check(args: &PagenineArgs, state: data::State) -> data::State {
     let mut notified = state.notified;
     if thread.page >= 9 && thread.page != state.notified {
         println!("Page >{}", thread.page);
-        let notification_shown = thread.show_notification();
+        let notification_shown = match pushover_client {
+            Some(pushover_client) => thread.send_pushover_notification(pushover_client).await,
+            None => thread.show_notification(),
+        };
         notified = match notification_shown {
             Ok(_) => thread.page,
             Err(_) => state.notified,
@@ -75,10 +91,20 @@ async fn main() {
     let forever = task::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(60));
         let mut state = data::State::new();
+        let pushover_client: Option<pushover::PushoverClient> = match (
+            &args.pushover_application_api_token,
+            &args.pushover_user_key,
+        ) {
+            (Some(token), Some(user)) => Some(pushover::PushoverClient {
+                token: token.to_string(),
+                user: user.to_string(),
+            }),
+            _ => None,
+        };
 
         loop {
             interval.tick().await;
-            state = check(&args, state).await;
+            state = check(&args, &pushover_client, state).await;
         }
     });
 

@@ -1,3 +1,4 @@
+use crate::pushover::{PushoverClient};
 use chrono::prelude::{DateTime, Utc};
 
 #[derive(Default, Debug)]
@@ -38,14 +39,22 @@ impl Thread {
     }
 
     /// Display a operating system notification about the thread.
-    pub fn show_notification(
-        self: &Self,
-    ) -> Result<notify_rust::NotificationHandle, notify_rust::error::Error> {
+    pub async fn send_pushover_notification(self: &Self, pushover_client: &PushoverClient) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
-        return notify_rust::Notification::new()
+        return pushover_client.send_notification(message, Some(&self.sub)).await;
+    }
+
+    /// Display a operating system notification about the thread.
+    pub fn show_notification(self: &Self) -> Result<(), ()> {
+        let message = format!(">page {}", self.page);
+        let notification_handle = notify_rust::Notification::new()
             .summary(message.as_str())
             .body(self.sub.as_str())
             .show();
+        return match notification_handle {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        }
     }
 
     /// Calculate how many minutes old the

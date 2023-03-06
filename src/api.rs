@@ -43,15 +43,17 @@ impl Catalog {
         for page in self.clone() {
             let page_length = page.threads.len() as i32;
             for (index, thread) in page.threads.into_iter().enumerate() {
-                if thread.sub.contains(title) {
-                    return Some(data::Thread {
-                        page: page.page,
-                        no: thread.no,
-                        sub: thread.sub,
-                        time: chrono::offset::Utc::now(),
-                        position: index as i32 + 1,
-                        page_length: page_length,
-                    });
+                if let Some(sub) = thread.sub {
+                    if sub.contains(title) {
+                        return Some(data::Thread {
+                            page: page.page,
+                            no: thread.no,
+                            sub: sub,
+                            time: chrono::offset::Utc::now(),
+                            position: index as i32 + 1,
+                            page_length: page_length,
+                        });
+                    }
                 }
             }
         }
@@ -70,5 +72,5 @@ pub struct Page {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Thread {
     pub no: i32,
-    pub sub: String,
+    pub sub: Option<String>,
 }

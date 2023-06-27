@@ -1,4 +1,4 @@
-use crate::pushover::{PushoverClient};
+use crate::pushover::PushoverClientTrait;
 use chrono::prelude::{DateTime, Utc};
 
 #[derive(Default, Debug)]
@@ -41,7 +41,10 @@ impl Thread {
     }
 
     /// Display a operating system notification about the thread.
-    pub async fn send_pushover_notification(self: &Self, pushover_client: &PushoverClient) -> Result<(), ()> {
+    pub async fn send_pushover_notification(
+        self: &Self,
+        pushover_client: &impl PushoverClientTrait,
+    ) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
         return pushover_client.send_notification(message, Some(&self.sub)).await;
     }

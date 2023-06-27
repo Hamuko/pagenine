@@ -1,4 +1,5 @@
-use log::{error};
+use async_trait::async_trait;
+use log::error;
 
 const PUSHOVER_API_URL: &str = "https://api.pushover.net/1/messages.json";
 
@@ -8,8 +9,18 @@ pub struct PushoverClient {
     pub user: String,
 }
 
-impl PushoverClient {
-    pub async fn send_notification(self: &Self, message: String, title: Option<&String>) -> Result<(), ()> {
+#[async_trait]
+pub trait PushoverClientTrait {
+    async fn send_notification(&self, message: String, title: Option<&String>) -> Result<(), ()>;
+}
+
+#[async_trait]
+impl PushoverClientTrait for PushoverClient {
+    async fn send_notification(
+        self: &Self,
+        message: String,
+        title: Option<&String>,
+    ) -> Result<(), ()> {
         let mut params = Vec::from([
             ("token", &self.token),
             ("user", &self.user),

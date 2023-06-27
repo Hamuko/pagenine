@@ -50,7 +50,7 @@ async fn get_current_thread(
 
 async fn check(
     args: &PagenineArgs,
-    pushover_client: &Option<pushover::PushoverClient>,
+    pushover_client: &Option<impl pushover::PushoverClientTrait>,
     state: data::State,
 ) -> data::State {
     let refresh = state

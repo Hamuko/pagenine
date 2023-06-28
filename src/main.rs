@@ -59,10 +59,10 @@ async fn check(
         .map_or(true, |thread| thread.check_if_needs_refresh());
 
     let thread = if refresh {
-        let last_update_time = state.thread.map(|thread| thread.time);
+        let last_update_time = state.thread.as_ref().map(|thread| thread.time);
         get_current_thread(&args.board, &args.title, last_update_time).await
     } else {
-        state.thread
+        state.thread.clone()
     };
     let thread = match thread {
         Some(thread) => thread,
@@ -73,6 +73,14 @@ async fn check(
         info!("\"{}\", page {} ({}/{})", thread.sub, thread.page, thread.position, thread.page_length);
     }
 
+    return notify(state, thread, pushover_client).await;
+}
+
+async fn notify(
+    state: data::State,
+    thread: data::Thread,
+    pushover_client: &Option<impl pushover::PushoverClientTrait>,
+) -> data::State {
     let mut notified = state.notified;
     if thread.page >= 9 && thread.page != state.notified {
         let notification_shown = match pushover_client {

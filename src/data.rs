@@ -16,7 +16,7 @@ impl State {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub struct Thread {
     pub page: i32,
     pub no: i32,

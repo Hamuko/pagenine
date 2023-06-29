@@ -127,3 +127,126 @@ async fn main() {
 
     let _ = forever.await;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use async_trait::async_trait;
+    use crate::pushover::PushoverClientTrait;
+    use test_case::test_case;
+
+    fn make_thread(page: i32) -> data::Thread {
+        data::Thread {
+            page,
+            no: 123456,
+            sub: String::from("x"),
+            time: chrono::offset::Utc::now(),
+            position: 1,
+            page_length: 10,
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    pub struct TestPushoverClient {
+        disabled: bool,
+        successful: bool,
+    }
+
+    impl TestPushoverClient {
+        fn new() -> Self {
+            return Self {
+                disabled: false,
+                successful: true,
+            };
+        }
+    }
+
+    #[async_trait]
+    impl PushoverClientTrait for TestPushoverClient {
+        async fn send_notification(
+            self: &Self,
+            _message: String,
+            _title: Option<&String>,
+        ) -> Result<(), ()> {
+            assert!(!self.disabled);
+            return match self.successful {
+                true => Ok(()),
+                false => Err(()),
+            };
+        }
+    }
+
+    #[test_case("vg", "vg"; "plain")]
+    #[test_case("/vg/", "vg"; "with slashes")]
+    fn args_validate_board(input: &str, output: &str) {
+        assert_eq!(validate_board(&input), Ok(String::from(output)));
+    }
+
+    #[tokio::test]
+    async fn notify_exceed_threshold() {
+        let thread = make_thread(9);
+        let state = data::State {
+            thread: None,
+            notified: 0,
+        };
+        let pushover_client = TestPushoverClient::new();
+        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 9);
+    }
+
+    #[tokio::test]
+    async fn notify_exceed_threshold_notification_failure() {
+        let thread = make_thread(9);
+        let state = data::State {
+            thread: None,
+            notified: 0,
+        };
+        let mut pushover_client = TestPushoverClient::new();
+        pushover_client.successful = false;
+        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 0);
+    }
+
+    #[tokio::test]
+    async fn notify_over_threshold_already_notified() {
+        let thread = make_thread(9);
+        let state = data::State {
+            thread: None,
+            notified: 9,
+        };
+        let mut pushover_client = TestPushoverClient::new();
+        pushover_client.disabled = true;
+        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 9);
+    }
+
+    #[tokio::test]
+    async fn notify_over_threshold_page_after() {
+        let thread = make_thread(10);
+        let state = data::State {
+            thread: None,
+            notified: 9,
+        };
+        let pushover_client = TestPushoverClient::new();
+        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 10);
+    }
+
+    #[tokio::test]
+    async fn notify_reset_notified() {
+        let thread = make_thread(1);
+        let state = data::State {
+            thread: None,
+            notified: 9,
+        };
+        let pushover_client = TestPushoverClient::new();
+        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 0);
+    }
+}

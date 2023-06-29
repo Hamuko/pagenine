@@ -11,10 +11,15 @@ chrono = "0.4"
 clap = { version = "3.2.17", features = ["derive"] }
 log = "0.4"
 notify-rust = "4.5.8"
-reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 simple_logger = "4.1"
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+reqwest = { version = "0.11", default-features = false, features = ["json", "default-tls"] }
 
 [dev-dependencies]
 test-case = "3.1"

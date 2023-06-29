@@ -1,10 +1,10 @@
 use chrono;
 use chrono::prelude::{DateTime, Utc};
 use clap::Parser;
+use log::{info, warn, LevelFilter};
+use simple_logger::SimpleLogger;
 use std::time::Duration;
 use tokio::{task, time};
-use simple_logger::SimpleLogger;
-use log::{info, warn, LevelFilter};
 
 mod api;
 mod data;
@@ -70,7 +70,10 @@ async fn check(
     };
 
     if refresh {
-        info!("\"{}\", page {} ({}/{})", thread.sub, thread.page, thread.position, thread.page_length);
+        info!(
+            "\"{}\", page {} ({}/{})",
+            thread.sub, thread.page, thread.position, thread.page_length
+        );
     }
 
     return notify(state, thread, pushover_client).await;
@@ -102,7 +105,11 @@ async fn notify(
 
 #[tokio::main]
 async fn main() {
-    SimpleLogger::new().with_level(LevelFilter::Info).env().init().unwrap();
+    SimpleLogger::new()
+        .with_level(LevelFilter::Info)
+        .env()
+        .init()
+        .unwrap();
     let args = PagenineArgs::parse();
 
     let forever = task::spawn(async move {
@@ -132,8 +139,8 @@ async fn main() {
 mod tests {
     use super::*;
 
-    use async_trait::async_trait;
     use crate::pushover::PushoverClientTrait;
+    use async_trait::async_trait;
     use test_case::test_case;
 
     fn make_thread(page: i32) -> data::Thread {

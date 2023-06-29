@@ -29,7 +29,7 @@ pub struct Thread {
 impl Thread {
     /// Check if the Thread should be refreshed from the API.
     pub fn check_if_needs_refresh(self: &Self) -> bool {
-        let minutes_since_refresh = self.time_since_closest_minute();
+        let minutes_since_refresh = self.time_in_minutes();
         return match self.page {
             1 => minutes_since_refresh >= 15,
             2 | 3 => minutes_since_refresh >= 10,
@@ -46,7 +46,9 @@ impl Thread {
         pushover_client: &impl PushoverClientTrait,
     ) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
-        return pushover_client.send_notification(message, Some(&self.sub)).await;
+        return pushover_client
+            .send_notification(message, Some(&self.sub))
+            .await;
     }
 
     /// Display a operating system notification about the thread.
@@ -59,11 +61,11 @@ impl Thread {
         return match notification_handle {
             Ok(_) => Ok(()),
             Err(_) => Err(()),
-        }
+        };
     }
 
-    /// Calculate how many minutes old the
-    fn time_since_closest_minute(self: &Self) -> i32 {
+    /// Calculate how many full minutes since the refresh.
+    fn time_in_minutes(self: &Self) -> i32 {
         let time_difference = chrono::offset::Utc::now() - self.time;
         let offset: f64 = time_difference.num_milliseconds() as f64 / 1000.0;
         let rounded_offset = offset.round() as i32;
@@ -120,6 +122,6 @@ mod tests {
             position: 1,
             page_length: 2,
         };
-        assert_eq!(thread.time_since_closest_minute(), minutes);
+        assert_eq!(thread.time_in_minutes(), minutes);
     }
 }

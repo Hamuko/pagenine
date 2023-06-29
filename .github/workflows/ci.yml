@@ -20,7 +20,7 @@ jobs:
         path: |
           ~/.cargo/registry
           ./target
-        key: build-cargo-registry-{{ runner.os }}
+        key: test-cargo-registry-${{ runner.os }}
     - name: Run tests
       run: cargo test --verbose
 

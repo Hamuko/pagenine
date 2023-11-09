@@ -1,6 +1,6 @@
 # BUILD CONTAINER
 
-FROM rust:1.65 as build
+FROM rust:1.73 as build
 
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
@@ -23,7 +23,7 @@ RUN cargo build --release
 
 # RUNTIME CONTAINER
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \

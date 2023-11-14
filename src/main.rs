@@ -184,6 +184,12 @@ mod tests {
         }
     }
 
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        PagenineArgs::command().debug_assert()
+    }
+
     #[test_case("vg", "vg"; "plain")]
     #[test_case("/vg/", "vg"; "with slashes")]
     fn args_validate_board(input: &str, output: &str) {

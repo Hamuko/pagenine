@@ -1,8 +1,10 @@
 use crate::data;
 use chrono::prelude::{DateTime, Utc};
-use reqwest::header::{HeaderValue, IF_MODIFIED_SINCE};
+use reqwest::header::{HeaderValue, IF_MODIFIED_SINCE, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use std::iter::IntoIterator;
+
+const CLIENT_USER_AGENT: &str = concat!("pagenine/", env!("CARGO_PKG_VERSION"));
 
 /// 4chan API catalog response.
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -24,6 +26,10 @@ impl Catalog {
         if_modified_since: Option<DateTime<Utc>>,
     ) -> Result<Catalog, Box<dyn std::error::Error>> {
         let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            USER_AGENT,
+            HeaderValue::from_str(CLIENT_USER_AGENT).unwrap(),
+        );
         if let Some(dt) = if_modified_since {
             let dt_str = dt.format("%a, %d %b %Y %H:%M:%S GMT").to_string();
             if let Ok(header_value) = HeaderValue::from_str(dt_str.as_str()) {

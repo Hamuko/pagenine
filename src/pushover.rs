@@ -16,11 +16,7 @@ pub trait PushoverClientTrait {
 
 #[async_trait]
 impl PushoverClientTrait for PushoverClient {
-    async fn send_notification(
-        self: &Self,
-        message: String,
-        title: Option<&String>,
-    ) -> Result<(), ()> {
+    async fn send_notification(&self, message: String, title: Option<&String>) -> Result<(), ()> {
         let mut params = Vec::from([
             ("token", &self.token),
             ("user", &self.user),

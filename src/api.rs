@@ -45,7 +45,7 @@ impl Catalog {
     }
 
     /// Find the first thread with the matching title.
-    pub fn find(self: &Self, title: &String) -> Option<data::Thread> {
+    pub fn find(&self, title: &String) -> Option<data::Thread> {
         for page in self.clone() {
             let page_length = page.threads.len() as i32;
             for (index, thread) in page.threads.into_iter().enumerate() {
@@ -54,10 +54,10 @@ impl Catalog {
                         return Some(data::Thread {
                             page: page.page,
                             no: thread.no,
-                            sub: sub,
+                            sub,
                             time: chrono::offset::Utc::now(),
                             position: index as i32 + 1,
-                            page_length: page_length,
+                            page_length,
                         });
                     }
                 }

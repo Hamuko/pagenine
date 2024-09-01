@@ -1,4 +1,3 @@
-use chrono;
 use chrono::prelude::{DateTime, Utc};
 use clap::Parser;
 use log::{info, warn, LevelFilter};
@@ -99,7 +98,7 @@ async fn notify(
     }
     return data::State {
         thread: Some(thread),
-        notified: notified,
+        notified,
     };
 }
 

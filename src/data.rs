@@ -28,7 +28,7 @@ pub struct Thread {
 
 impl Thread {
     /// Check if the Thread should be refreshed from the API.
-    pub fn check_if_needs_refresh(self: &Self) -> bool {
+    pub fn check_if_needs_refresh(&self) -> bool {
         let minutes_since_refresh = self.time_in_minutes();
         return match self.page {
             1 => minutes_since_refresh >= 15,
@@ -42,7 +42,7 @@ impl Thread {
 
     /// Display a operating system notification about the thread.
     pub async fn send_pushover_notification(
-        self: &Self,
+        &self,
         pushover_client: &impl PushoverClientTrait,
     ) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
@@ -52,7 +52,7 @@ impl Thread {
     }
 
     /// Display a operating system notification about the thread.
-    pub fn show_notification(self: &Self) -> Result<(), ()> {
+    pub fn show_notification(&self) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
         let notification_handle = notify_rust::Notification::new()
             .summary(message.as_str())
@@ -65,7 +65,7 @@ impl Thread {
     }
 
     /// Calculate how many full minutes since the refresh.
-    fn time_in_minutes(self: &Self) -> i32 {
+    fn time_in_minutes(&self) -> i32 {
         let time_difference = chrono::offset::Utc::now() - self.time;
         let offset: f64 = time_difference.num_milliseconds() as f64 / 1000.0;
         let rounded_offset = offset.round() as i32;

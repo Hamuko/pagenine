@@ -36,6 +36,9 @@ impl Thread {
             4 | 5 => minutes_since_refresh >= 7,
             6 => minutes_since_refresh >= 5,
             7 => minutes_since_refresh >= 3,
+            8 if (self.position as f32 / self.page_length as f32) < 0.5 => {
+                minutes_since_refresh >= 2
+            }
             _ => true,
         };
     }
@@ -106,6 +109,21 @@ mod tests {
             time: chrono::offset::Utc::now() - Duration::seconds(seconds),
             position: 1,
             page_length: 2,
+        };
+        assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
+    }
+
+    #[test_case(6, 88, false; "under former threshold")]
+    #[test_case(8, 130, true; "over former threshold")]
+    #[test_case(10, 10, true; "latter always refreshable")]
+    fn thread_check_if_needs_refresh_page_8(position: i32, seconds: i64, needs_refresh: bool) {
+        let thread = Thread {
+            page: 8,
+            no: 1,
+            sub: String::new(),
+            time: chrono::offset::Utc::now() - Duration::seconds(seconds),
+            position: position,
+            page_length: 20,
         };
         assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
     }

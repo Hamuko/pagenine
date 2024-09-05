@@ -1,13 +1,13 @@
 # BUILD CONTAINER
 
-FROM rust:1.76 as build
+FROM rust:1.76 AS build
 
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
 RUN USER=root cargo new --bin pagenine
 
 # Build dependencies separately for layer caching.
-WORKDIR ./pagenine
+WORKDIR /pagenine
 COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 RUN cargo build --release

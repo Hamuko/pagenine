@@ -54,7 +54,22 @@ impl Thread {
             .await;
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn show_notification(&self) -> Result<(), ()> {
+        let message = format!(">page {}", self.page);
+        let notification_handle = mac_notification_sys::Notification::default()
+            .title(message.as_str())
+            .message(self.sub.as_str())
+            .sound(mac_notification_sys::Sound::Default)
+            .send();
+        return match notification_handle {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        };
+    }
+
     /// Display a operating system notification about the thread.
+    #[cfg(not(target_os = "macos"))]
     pub fn show_notification(&self) -> Result<(), ()> {
         let message = format!(">page {}", self.page);
         let notification_handle = notify_rust::Notification::new()

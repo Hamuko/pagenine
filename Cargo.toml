@@ -10,10 +10,15 @@ async-trait = "0.1"
 chrono = "0.4"
 clap = { version = "4.4", features = ["derive"] }
 log = "0.4"
-notify-rust = "4.8"
 serde = { version = "1.0", features = ["derive"] }
 simple_logger = "4.1"
 tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+mac-notification-sys = "0.6"
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+notify-rust = "4.8"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }

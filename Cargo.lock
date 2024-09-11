@@ -1170,6 +1170,7 @@ dependencies = [
  "chrono",
  "clap",
  "log",
+ "mac-notification-sys",
  "notify-rust",
  "reqwest",
  "serde",

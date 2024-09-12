@@ -36,9 +36,17 @@ impl Thread {
             4 | 5 => minutes_since_refresh >= 7,
             6 => minutes_since_refresh >= 5,
             7 => minutes_since_refresh >= 3,
-            8 if (self.position as f32 / self.page_length as f32) < 0.5 => {
-                minutes_since_refresh >= 2
+            8 | 9 => {
+                let page_position = self.position as f32 / self.page_length as f32;
+                if page_position < 0.5 {
+                    minutes_since_refresh >= 2
+                } else if page_position < 0.8 {
+                    minutes_since_refresh >= 1
+                } else {
+                    true
+                }
             }
+            10 => minutes_since_refresh >= 2,
             _ => true,
         };
     }
@@ -96,7 +104,7 @@ mod tests {
     use super::*;
 
     use chrono::Duration;
-    use test_case::test_case;
+    use test_case::{test_case, test_matrix};
 
     #[test]
     fn state_new() {
@@ -115,7 +123,6 @@ mod tests {
     #[test_case(6, 333, true; "over page 6 threshold")]
     #[test_case(7, 65, false; "under page 7 threshold")]
     #[test_case(7, 210, true; "over page 7 threshold")]
-    #[test_case(9, 15, true; "always refreshable")]
     fn thread_check_if_needs_refresh(page: i32, seconds: i64, needs_refresh: bool) {
         let thread = Thread {
             page,
@@ -128,12 +135,19 @@ mod tests {
         assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
     }
 
-    #[test_case(6, 88, false; "under former threshold")]
-    #[test_case(8, 130, true; "over former threshold")]
-    #[test_case(10, 10, true; "latter always refreshable")]
-    fn thread_check_if_needs_refresh_page_8(position: i32, seconds: i64, needs_refresh: bool) {
+    #[test_matrix([8, 9], 6, 90, false; "under slow threshold")]
+    #[test_matrix([8, 9], 8, 150, true; "over slow threshold")]
+    #[test_matrix([8, 9], 11, 30, false; "under normal threshold")]
+    #[test_matrix([8, 9], 13, 90, true; "over normal threshold")]
+    #[test_matrix([8, 9], 17, 30, true; "late always refreshable")]
+    fn thread_check_if_needs_refresh_page_8_9(
+        page: i32,
+        position: i32,
+        seconds: i64,
+        needs_refresh: bool,
+    ) {
         let thread = Thread {
-            page: 8,
+            page: page,
             no: 1,
             sub: String::new(),
             time: chrono::offset::Utc::now() - Duration::seconds(seconds),

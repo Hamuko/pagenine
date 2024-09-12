@@ -112,7 +112,7 @@ async fn main() {
     let args = PagenineArgs::parse();
 
     let forever = task::spawn(async move {
-        let mut interval = time::interval(Duration::from_secs(60));
+        let mut interval = time::interval(Duration::from_secs(30));
         let mut state = data::State::new();
         let pushover_client: Option<pushover::PushoverClient> = match (
             &args.pushover_application_api_token,

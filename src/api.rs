@@ -49,7 +49,10 @@ impl Catalog {
         for page in self.clone() {
             let page_length = page.threads.len() as i32;
             for (index, thread) in page.threads.into_iter().enumerate() {
-                if let Some(sub) = thread.sub {
+                if let Some(sub) = thread
+                    .sub
+                    .map(|x| html_escape::decode_html_entities(&x).to_string())
+                {
                     if sub.contains(title) {
                         return Some(data::Thread {
                             page: page.page,

@@ -9,6 +9,7 @@ edition = "2021"
 async-trait = "0.1"
 chrono = "0.4"
 clap = { version = "4.4", features = ["derive"] }
+html-escape = "0.2"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 simple_logger = "4.1"

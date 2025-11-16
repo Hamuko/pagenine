@@ -19,6 +19,10 @@ pub struct PagenineArgs {
     #[clap(value_parser)]
     pub title: String,
 
+    /// Ignore threads that have reached bump limit.
+    #[clap(long, value_parser)]
+    pub no_bump_limit: bool,
+
     /// Pushover application API key.
     #[clap(long, value_parser)]
     pub pushover_application_api_token: Option<String>,
@@ -75,16 +79,17 @@ async fn check(
         );
     }
 
-    return notify(state, thread, pushover_client).await;
+    return notify(state, thread, args.no_bump_limit, pushover_client).await;
 }
 
 async fn notify(
     state: data::State,
     thread: data::Thread,
+    no_bump_limit: bool,
     pushover_client: &Option<impl pushover::PushoverClientTrait>,
 ) -> data::State {
     let mut notified = state.notified;
-    if thread.page >= 9 && thread.page != state.notified {
+    if thread.page >= 9 && !(no_bump_limit && thread.bumplimit) && thread.page != state.notified {
         let notification_shown = match pushover_client {
             Some(pushover_client) => thread.send_pushover_notification(pushover_client).await,
             None => thread.show_notification(),
@@ -150,6 +155,7 @@ mod tests {
             time: chrono::offset::Utc::now(),
             position: 1,
             page_length: 10,
+            bumplimit: false,
         }
     }
 
@@ -203,9 +209,30 @@ mod tests {
             notified: 0,
         };
         let pushover_client = TestPushoverClient::new();
-        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        let new_state = notify(state, thread.clone(), false, &Some(pushover_client)).await;
         assert_eq!(new_state.thread, Some(thread));
         assert_eq!(new_state.notified, 9);
+    }
+
+    #[tokio::test]
+    async fn notify_exceed_threshold_no_bumplimit() {
+        let thread = data::Thread {
+            page: 9,
+            no: 123456,
+            sub: String::from("x"),
+            time: chrono::offset::Utc::now(),
+            position: 1,
+            page_length: 10,
+            bumplimit: true,
+        };
+        let state = data::State {
+            thread: None,
+            notified: 0,
+        };
+        let pushover_client = TestPushoverClient::new();
+        let new_state = notify(state, thread.clone(), true, &Some(pushover_client)).await;
+        assert_eq!(new_state.thread, Some(thread));
+        assert_eq!(new_state.notified, 0);
     }
 
     #[tokio::test]
@@ -217,7 +244,7 @@ mod tests {
         };
         let mut pushover_client = TestPushoverClient::new();
         pushover_client.successful = false;
-        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        let new_state = notify(state, thread.clone(), false, &Some(pushover_client)).await;
         assert_eq!(new_state.thread, Some(thread));
         assert_eq!(new_state.notified, 0);
     }
@@ -231,7 +258,7 @@ mod tests {
         };
         let mut pushover_client = TestPushoverClient::new();
         pushover_client.disabled = true;
-        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        let new_state = notify(state, thread.clone(), false, &Some(pushover_client)).await;
         assert_eq!(new_state.thread, Some(thread));
         assert_eq!(new_state.notified, 9);
     }
@@ -244,7 +271,7 @@ mod tests {
             notified: 9,
         };
         let pushover_client = TestPushoverClient::new();
-        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        let new_state = notify(state, thread.clone(), false, &Some(pushover_client)).await;
         assert_eq!(new_state.thread, Some(thread));
         assert_eq!(new_state.notified, 10);
     }
@@ -257,7 +284,7 @@ mod tests {
             notified: 9,
         };
         let pushover_client = TestPushoverClient::new();
-        let new_state = notify(state, thread.clone(), &Some(pushover_client)).await;
+        let new_state = notify(state, thread.clone(), false, &Some(pushover_client)).await;
         assert_eq!(new_state.thread, Some(thread));
         assert_eq!(new_state.notified, 0);
     }

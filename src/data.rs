@@ -24,6 +24,7 @@ pub struct Thread {
     pub time: DateTime<Utc>,
     pub position: i32,
     pub page_length: i32,
+    pub bumplimit: bool,
 }
 
 impl Thread {
@@ -131,6 +132,7 @@ mod tests {
             time: chrono::offset::Utc::now() - Duration::seconds(seconds),
             position: 1,
             page_length: 2,
+            bumplimit: false,
         };
         assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
     }
@@ -153,6 +155,7 @@ mod tests {
             time: chrono::offset::Utc::now() - Duration::seconds(seconds),
             position: position,
             page_length: 20,
+            bumplimit: false,
         };
         assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
     }
@@ -168,6 +171,7 @@ mod tests {
             time: chrono::offset::Utc::now() - Duration::seconds(seconds),
             position: 1,
             page_length: 2,
+            bumplimit: false,
         };
         assert_eq!(thread.time_in_minutes(), minutes);
     }

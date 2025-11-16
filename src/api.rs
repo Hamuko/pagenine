@@ -61,6 +61,7 @@ impl Catalog {
                             time: chrono::offset::Utc::now(),
                             position: index as i32 + 1,
                             page_length,
+                            bumplimit: thread.bumplimit == 1,
                         });
                     }
                 }
@@ -82,4 +83,5 @@ pub struct Page {
 pub struct Thread {
     pub no: i32,
     pub sub: Option<String>,
+    pub bumplimit: i8,
 }

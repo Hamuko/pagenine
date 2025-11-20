@@ -40,15 +40,9 @@ async fn get_current_thread(
     board: &String,
     title: &String,
     if_modified_since: Option<DateTime<Utc>>,
-) -> Option<data::Thread> {
-    let catalog = match api::Catalog::fetch(board, if_modified_since).await {
-        Ok(catalog) => catalog,
-        Err(error) => {
-            warn!("{}", error);
-            return None;
-        }
-    };
-    catalog.find(title)
+) -> Result<Option<data::Thread>, Box<dyn std::error::Error>> {
+    let catalog = api::Catalog::fetch(board, if_modified_since).await?;
+    Ok(catalog.find(title))
 }
 
 async fn check(
@@ -63,7 +57,13 @@ async fn check(
 
     let thread = if refresh {
         let last_update_time = state.thread.as_ref().map(|thread| thread.time);
-        get_current_thread(&args.board, &args.title, last_update_time).await
+        match get_current_thread(&args.board, &args.title, last_update_time).await {
+            Ok(thread) => thread,
+            Err(error) => {
+                warn!("Error fetching thread: {}", error);
+                return state;
+            }
+        }
     } else {
         state.thread.clone()
     };

@@ -73,10 +73,17 @@ async fn check(
     };
 
     if refresh {
-        info!(
-            "\"{}\", page {} ({}/{})",
-            thread.sub, thread.page, thread.position, thread.page_length
-        );
+        if thread.bumplimit {
+            info!(
+                "\"{}\", page {} ({}/{}), over bump limit",
+                thread.sub, thread.page, thread.position, thread.page_length
+            );
+        } else {
+            info!(
+                "\"{}\", page {} ({}/{})",
+                thread.sub, thread.page, thread.position, thread.page_length
+            );
+        }
     }
 
     return notify(state, thread, args.no_bump_limit, pushover_client).await;

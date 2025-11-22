@@ -39,9 +39,15 @@ impl Thread {
             7 => minutes_since_refresh >= 3,
             8 | 9 => {
                 let page_position = self.position as f32 / self.page_length as f32;
-                if page_position < 0.5 {
+                if page_position < 0.6 {
                     minutes_since_refresh >= 2
-                } else if page_position < 0.8 {
+                } else if page_position < 0.85 {
+                    if self.bumplimit {
+                        minutes_since_refresh >= 2
+                    } else {
+                        minutes_since_refresh >= 1
+                    }
+                } else if self.bumplimit {
                     minutes_since_refresh >= 1
                 } else {
                     true
@@ -156,6 +162,28 @@ mod tests {
             position: position,
             page_length: 20,
             bumplimit: false,
+        };
+        assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
+    }
+
+    #[test_matrix([8, 9], 15, 90, false; "under normal threshold")]
+    #[test_matrix([8, 9], 15, 150, true; "over normal threshold")]
+    #[test_matrix([8, 9], 18, 45, false; "late under")]
+    #[test_matrix([8, 9], 18, 75, true; "late over")]
+    fn thread_check_if_needs_refresh_page_8_9_bump_limited(
+        page: i32,
+        position: i32,
+        seconds: i64,
+        needs_refresh: bool,
+    ) {
+        let thread = Thread {
+            page: page,
+            no: 1,
+            sub: String::new(),
+            time: chrono::offset::Utc::now() - Duration::seconds(seconds),
+            position: position,
+            page_length: 20,
+            bumplimit: true,
         };
         assert_eq!(thread.check_if_needs_refresh(), needs_refresh);
     }

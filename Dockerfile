@@ -1,6 +1,6 @@
 # BUILD CONTAINER
 
-FROM rust:1.85 AS build
+FROM rust:1.91 AS build
 
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
@@ -23,13 +23,11 @@ RUN cargo build --release
 
 # RUNTIME CONTAINER
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ENV PAGENINE_BOARD=
 ENV PAGENINE_TITLE=
 ENV PAGENINE_NO_BUMP_LIMIT=false
-ENV PAGENINE_PUSHOVER_APPLICATION_API_TOKEN=
-ENV PAGENINE_PUSHOVER_USER_KEY=
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \

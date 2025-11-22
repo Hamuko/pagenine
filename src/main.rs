@@ -95,23 +95,35 @@ async fn notify(
     no_bump_limit: bool,
     pushover_client: &Option<impl pushover::PushoverClientTrait>,
 ) -> data::State {
-    let mut notified = state.notified;
-    if thread.page >= 9 && !(no_bump_limit && thread.bumplimit) && thread.page != state.notified {
-        let notification_shown = match pushover_client {
-            Some(pushover_client) => thread.send_pushover_notification(pushover_client).await,
-            None => thread.show_notification(),
+    // Thread needs to have hit page 9 for any notification to happen.
+    if thread.page < 9 {
+        return data::State {
+            thread: Some(thread),
+            notified: 0,
         };
-        notified = match notification_shown {
-            Ok(_) => thread.page,
-            Err(_) => state.notified,
-        }
-    } else if thread.page < 9 {
-        notified = 0;
     }
-    return data::State {
+
+    // Do not notify if a notification for the same page has already been sent,
+    // or the thread has hit the bump limit when bump limits are ignored.
+    if thread.page == state.notified || (no_bump_limit && thread.bumplimit) {
+        return data::State {
+            thread: Some(thread),
+            notified: state.notified,
+        };
+    }
+
+    let notification_shown = match pushover_client {
+        Some(pushover_client) => thread.send_pushover_notification(pushover_client).await,
+        None => thread.show_notification(),
+    };
+    let notified = match notification_shown {
+        Ok(_) => thread.page,
+        Err(_) => state.notified,
+    };
+    data::State {
         thread: Some(thread),
         notified,
-    };
+    }
 }
 
 #[tokio::main]

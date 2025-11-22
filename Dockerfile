@@ -25,10 +25,16 @@ RUN cargo build --release
 
 FROM debian:bookworm-slim
 
+ENV PAGENINE_BOARD=
+ENV PAGENINE_TITLE=
+ENV PAGENINE_NO_BUMP_LIMIT=false
+ENV PAGENINE_PUSHOVER_APPLICATION_API_TOKEN=
+ENV PAGENINE_PUSHOVER_USER_KEY=
+
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     openssl \
-&& rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /pagenine/target/release/pagenine .
 

@@ -12,23 +12,23 @@ mod pushover;
 #[derive(Parser, Debug)]
 pub struct PagenineArgs {
     /// Name of the board to scan.
-    #[clap(value_parser = validate_board)]
+    #[clap(value_parser = validate_board, env = "PAGENINE_BOARD")]
     pub board: String,
 
     /// Title of the thread to scan.
-    #[clap(value_parser)]
+    #[clap(value_parser, env = "PAGENINE_TITLE")]
     pub title: String,
 
     /// Ignore threads that have reached bump limit.
-    #[clap(long, value_parser)]
+    #[clap(long, value_parser, env = "PAGENINE_NO_BUMP_LIMIT")]
     pub no_bump_limit: bool,
 
     /// Pushover application API key.
-    #[clap(long, value_parser)]
+    #[clap(long, value_parser, env = "PAGENINE_PUSHOVER_APPLICATION_API_TOKEN")]
     pub pushover_application_api_token: Option<String>,
 
     /// Pushover user key.
-    #[clap(long, value_parser)]
+    #[clap(long, value_parser, env = "PAGENINE_PUSHOVER_USER_KEY")]
     pub pushover_user_key: Option<String>,
 }
 

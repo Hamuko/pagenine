@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Pre-built binaries for ARM64 Windows.
+
 ### Changed
 
 - Upgraded dependencies.

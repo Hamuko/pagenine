@@ -1,6 +1,6 @@
 # BUILD CONTAINER
 
-FROM rust:1.91 AS build
+FROM rust:1.93 AS build
 
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 
@@ -23,17 +23,12 @@ RUN cargo build --release
 
 # RUNTIME CONTAINER
 
-FROM debian:trixie-slim
+FROM gcr.io/distroless/cc-debian13
+
+COPY --from=build /pagenine/target/release/pagenine /bin/pagenine
 
 ENV PAGENINE_BOARD=
 ENV PAGENINE_TITLE=
 ENV PAGENINE_NO_BUMP_LIMIT=false
 
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=build /pagenine/target/release/pagenine .
-
-ENTRYPOINT ["./pagenine"]
+ENTRYPOINT ["/bin/pagenine"]

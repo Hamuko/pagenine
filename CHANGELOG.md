@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Docker image now uses Google's ["distroless" base image](https://github.com/GoogleContainerTools/distroless).
 - Upgraded dependencies.
 
 ## [1.3.0] - 2025-11-29

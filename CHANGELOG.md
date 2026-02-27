@@ -9,6 +9,7 @@
 ### Changed
 
 - Docker image now uses Google's ["distroless" base image](https://github.com/GoogleContainerTools/distroless).
+- SIGINT and SIGTERM are now handled gracefully.
 - Upgraded dependencies.
 
 ## [1.3.0] - 2025-11-29

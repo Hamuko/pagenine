@@ -3,7 +3,10 @@ use clap::Parser;
 use log::{info, warn, LevelFilter};
 use simple_logger::SimpleLogger;
 use std::time::Duration;
+use tokio::select;
+use tokio::signal;
 use tokio::{task, time};
+use tokio_util::sync::CancellationToken;
 
 mod api;
 mod data;
@@ -126,6 +129,28 @@ async fn notify(
     }
 }
 
+#[cfg(unix)]
+/// Wait for SIGINT (Ctrl-C) or SIGTERM to end the client (Unix).
+async fn wait_termination() {
+    let mut sigterm = signal::unix::signal(signal::unix::SignalKind::terminate())
+        .expect("Could not register SIGTERM handler");
+    select! {
+        _ = signal::ctrl_c() => log::debug!("Received SIGINT"),
+        _ = sigterm.recv() => log::debug!("Received SIGTERM"),
+    }
+}
+
+#[cfg(not(unix))]
+/// Wait for SIGINT (Ctrl-C) to end the client (Windows).
+async fn wait_termination() {
+    match signal::ctrl_c().await {
+        Ok(()) => log::debug!("Received SIGINT"),
+        Err(err) => {
+            log::error!("Unable to listen to shutdown signal: {}", err);
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     SimpleLogger::new()
@@ -134,6 +159,9 @@ async fn main() {
         .init()
         .unwrap();
     let args = PagenineArgs::parse();
+
+    let cancellation_token = CancellationToken::new();
+    let cloned_cancellation_token = cancellation_token.clone();
 
     let forever = task::spawn(async move {
         let mut interval = time::interval(Duration::from_secs(30));
@@ -150,10 +178,16 @@ async fn main() {
         };
 
         loop {
-            interval.tick().await;
+            tokio::select! {
+                _ = interval.tick() => {},
+                _ = cloned_cancellation_token.cancelled() => break,
+            };
             state = check(&args, &pushover_client, state).await;
         }
     });
+
+    wait_termination().await;
+    cancellation_token.cancel();
 
     let _ = forever.await;
 }

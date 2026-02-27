@@ -1195,6 +1195,7 @@ dependencies = [
  "simple_logger",
  "test-case",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]
@@ -1793,6 +1794,7 @@ dependencies = [
  "libc",
  "mio",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2 0.6.2",
  "tokio-macros",
  "windows-sys 0.61.2",

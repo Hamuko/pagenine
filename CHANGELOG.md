@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-01
+
 ### Added
 
 - Pre-built binaries for ARM64 Windows, musl Linux.
@@ -55,7 +57,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/Hamuko/pagenine/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/Hamuko/pagenine/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/Hamuko/pagenine/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/Hamuko/pagenine/compare/1.2.1...1.3.0
 [1.2.1]: https://github.com/Hamuko/pagenine/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/Hamuko/pagenine/compare/1.1.0...1.2.0

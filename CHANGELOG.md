@@ -4,7 +4,7 @@
 
 ### Added
 
-- Pre-built binaries for ARM64 Windows.
+- Pre-built binaries for ARM64 Windows, musl Linux.
 
 ### Changed
 

@@ -155,7 +155,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           path: ./artifacts
-          pattern: build-artifact-*
+          pattern: release-build-*
           merge-multiple: true
       - name: Release to GitHub
         uses: softprops/action-gh-release@v2

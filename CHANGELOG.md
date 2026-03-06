@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded dependencies.
+
 ## [1.4.0] - 2026-03-01
 
 ### Added
